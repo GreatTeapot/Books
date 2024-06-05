@@ -1,0 +1,8 @@
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django_countries.fields import CountryField
+
+
+class CustomUser(AbstractUser):
+    username = models.CharField(max_length=50, unique=True)
+    email = models.EmailField(unique=True)
