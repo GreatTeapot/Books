@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Book, Page
-from .serializers import BookSerializer, BookListSerializer, PageSerializer
+from .serializers import *
 
 
 @extend_schema(tags=['Books'])
@@ -62,18 +62,41 @@ class PageListView(generics.ListAPIView):
 @extend_schema(tags=['Books'])
 class PageDetailView(generics.RetrieveAPIView):
     """
-       Здесь нужен access токен и эндроинт выдает определенную страницу,
-       эндроинт нужен для чтения книги юзером
+        Здесь нужен access токен и эндроинт выдает определенную страницу,
+        эндроинт нужен для чтения книги юзером
     """
-    permission_classes = [IsAuthenticated]
+    queryset = Page.objects.all()
     serializer_class = PageSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         page_id = self.kwargs.get('page_id')
-
         try:
             page = Page.objects.get(pk=page_id)
             serializer = self.get_serializer(page)
+
+            LastPage.objects.update_or_create(
+                user=request.user,
+                defaults={'page': page}
+            )
+
             return Response(serializer.data)
         except Page.DoesNotExist:
             return Response({"error": "Page not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@extend_schema(tags=['Books'])
+class LastPageView(generics.RetrieveAPIView):
+    """
+        Здесь нужен access токен и эндроинт выдает последнюю страницу книги  которую он прочитал
+    """
+    serializer_class = LastPageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            last_page = LastPage.objects.get(user=request.user)
+            serializer = self.get_serializer(last_page)
+            return Response(serializer.data)
+        except LastPage.DoesNotExist:
+            return Response({"error": "No last page found for user"}, status=status.HTTP_404_NOT_FOUND)

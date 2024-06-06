@@ -36,6 +36,7 @@ class BookAdmin(admin.ModelAdmin):
             response['Content-Disposition'] = f'attachment; filename={os.path.basename(pdf_path)}'
             return response
 
+
 admin.site.register(Book, BookAdmin)
 admin.site.register(Page)
 admin.site.register(LastPage)

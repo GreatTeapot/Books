@@ -10,10 +10,9 @@ from reportlab.pdfgen import canvas
 from regauth.models import CustomUser
 
 
-
 class Book(models.Model):
     name = models.CharField(max_length=35, unique=True, null=False)
-    image = models.ImageField(upload_to='book_images/', null=True)
+    image = models.ImageField(null=True, blank=True, upload_to='book_images/')
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='books', null=True)
     total_pages = models.IntegerField(default=0, editable=False)
     pdf = models.FileField(upload_to='book_pdfs/', blank=True, null=True)
@@ -48,6 +47,7 @@ class Book(models.Model):
 
         super().save(update_fields=['pdf'])
 
+
 class Page(models.Model):
     text = models.TextField()
     page_number = models.PositiveIntegerField()
@@ -63,8 +63,6 @@ class Page(models.Model):
             self.page_number = max_page + 1
         super().save(*args, **kwargs)
 
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 
 @receiver(post_save, sender=Page)
 @receiver(post_delete, sender=Page)
