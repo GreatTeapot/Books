@@ -1,19 +1,13 @@
 import re
-
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from .models import CustomUser
-from django.utils.translation import gettext_lazy as _
 
 
 class UserSerializer(serializers.ModelSerializer):
-    location_country = serializers.CharField(source='get_location_country_display', allow_blank=True)  # Serialize country name
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'avatar', 'first_name', 'last_name','age', 'school','location_country', 'about_you')
+        fields = ('id', 'username', 'email', 'books_read', )
 
 
 class UserRegisSerializer(serializers.ModelSerializer):
@@ -22,17 +16,12 @@ class UserRegisSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'password',  'first_name', 'last_name', 'school', 'age', 'location_country', 'about_you')
+        fields = ('id', 'username', 'email', 'password')
         extra_kwargs = {
             'username': {'write_only': True},
             'email': {'write_only': True},
             'password': {'write_only': True},
-            'first_name': {'required': False,'write_only': True},
-            'last_name': {'required': False,'write_only': True},
-            'age': {'required': False, 'write_only': True},
-            'school': {'required': False, 'write_only': True},
-            'location_country': {'required': False, 'write_only': True},
-            'about_you': {'required': False, 'write_only': True},
+
 
         }
 
@@ -51,24 +40,13 @@ class UserRegisSerializer(serializers.ModelSerializer):
 
         return value
 
-    def validate_age(self, value):
-        if value is not None and (value < 0 or value > 100):
-            raise serializers.ValidationError("Age must be between 0 and 100.")
 
-        return value
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
             email=validated_data.get('email', ''),
             username=validated_data['username'],
             password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            age=validated_data.get('age'),
-            school=validated_data.get('school', ''),
-            location_country=validated_data.get('location_country', ''),
-            about_you=validated_data.get('about_you', ''),
-
         )
         return user
 
