@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-&jez+=6ro+0q2tk4qe$75+2k@x%zyjjzw2)#3!0(6wv6^_f1s1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -59,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'Books.urls'
@@ -136,7 +138,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = '/var/www/ORT/static/'
+STATIC_ROOT = 'static/'
 
 
 # Default primary key field type
@@ -225,7 +227,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3030',
-    'http://217.151.230.35',
+    # 'http://217.151.230.35',
     'http://localhost:5173',
 ]
 
@@ -251,4 +253,4 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
 ]
 
-CSRF_TRUSTED_ORIGINS = ['http://217.151.230.35:545']
+# CSRF_TRUSTED_ORIGINS = ['http://217.151.230.35:545']

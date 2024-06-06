@@ -14,11 +14,14 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+@extend_schema(tags=['Authorization'])
 class RegistrationAPIView(APIView):
+    """
+    Обычная регистация
+    """
     permission_classes = [AllowAny]
     serializer_class = UserRegisSerializer
 
-    @extend_schema(tags=['Auth'])
     def post(self, request, *args, **kwargs):
         serializer = UserRegisSerializer(data=request.data)
         if serializer.is_valid():
@@ -36,9 +39,12 @@ class RegistrationAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(tags=['Authorization'])
 class CustomUserLoginView(TokenObtainPairView):
+    """
+    login
+    """
 
-    @extend_schema(tags=['Auth'])
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         tokens = response.data
@@ -54,8 +60,11 @@ class CustomUserLoginView(TokenObtainPairView):
         return Response(tokens, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['Authorization'])
 class CustomUserList(generics.ListAPIView):
-    @extend_schema(tags=['Auth'])
+    """
+    Не нужен access токен, публичный и выводит всю информацию о юзерах
+    """
     def none(self):
         pass
     permission_classes = [AllowAny]
@@ -63,37 +72,40 @@ class CustomUserList(generics.ListAPIView):
     serializer_class = UserSerializer
 
 
+@extend_schema(tags=['Authorization'])
 class UserSearchList(generics.ListAPIView):
-    @extend_schema(tags=['Auth'])
+    """
+       Не нужен access токен, публичный и выводит всю информацию об одном юзере
+    """
     def none(self):
         pass
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = UserSerializer
     queryset = CustomUser.objects.all()
 
 
+@extend_schema(tags=['Authorization'])
 class UserInfoAPIView(generics.RetrieveUpdateAPIView):
+    """
+        нужен access токен и евляется его профилем
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
-    @extend_schema(tags=['Auth'])
     def get_object(self):
         return self.request.user
 
-    @extend_schema(tags=['Auth'])
     def get(self, request, *args, **kwargs):
         user_instance = self.get_object()
         user_serializer = self.serializer_class(user_instance)
         return Response(user_serializer.data)
 
 
-
-
+@extend_schema(tags=['Authorization'])
 class ChangePasswordAPIView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
 
-    @extend_schema(tags=['Auth'])
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
@@ -110,14 +122,13 @@ class ChangePasswordAPIView(APIView):
             return Response({'detail': 'Password changed successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @extend_schema(tags=['Auth'])
-    def none(self):
-        pass
 
-
+@extend_schema(tags=['Authorization'])
 class CustomUserTokenRefreshView(APIView):
+    """
+        эндпоинт для обновление access токена
+    """
 
-    @extend_schema(tags=['Auth'])
     def post(self, request, *args, **kwargs):
         try:
             refresh_token = request.data["refresh"]
