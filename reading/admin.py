@@ -4,7 +4,12 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 from django.http import HttpResponse
-from .models import Book, Page, LastPage
+from .models import *
+
+
+class GenreInlineAdmin(admin.TabularInline):
+    model = BookGenre
+    extra = 3
 
 
 class PageInlineAdmin(admin.TabularInline):
@@ -15,8 +20,10 @@ class PageInlineAdmin(admin.TabularInline):
 
 class BookAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'total_pages', 'pdf')
-    readonly_fields = ('pdf', 'total_pages')
-    inlines = [PageInlineAdmin]
+    readonly_fields = ('total_pages', 'pdf')
+    inlines = [PageInlineAdmin, GenreInlineAdmin]
+
+    exclude = ('status',)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -37,6 +44,10 @@ class BookAdmin(admin.ModelAdmin):
             return response
 
 
+
+
+
 admin.site.register(Book, BookAdmin)
 admin.site.register(Page)
 admin.site.register(LastPage)
+admin.site.register(Genre)

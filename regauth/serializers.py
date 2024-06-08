@@ -4,10 +4,14 @@ from .models import CustomUser
 
 
 class UserSerializer(serializers.ModelSerializer):
+    books = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email',  )
+        fields = ('id', 'username', 'email', 'books')
+
+    def get_books(self, obj):
+        return [book.name for book in obj.books.all()]
 
 
 class UserRegisSerializer(serializers.ModelSerializer):
@@ -40,8 +44,6 @@ class UserRegisSerializer(serializers.ModelSerializer):
 
         return value
 
-
-
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
             email=validated_data.get('email', ''),
@@ -56,5 +58,5 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True)
 
 
-
+# zalkar
 

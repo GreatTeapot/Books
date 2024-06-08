@@ -1,32 +1,46 @@
 import os
-from io import BytesIO
-from django.core.files import File
-from django.db import models
-from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from regauth.models import CustomUser
+from django.db import models
+from django.conf import settings
+from django.core.files import File
+from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from regauth.models import CustomUser
 
 
+class Genre(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Book(models.Model):
+    STATUS_CHOICES = [
+        ('', ''),
+        ('reading', 'reading'),
+        ('read', 'read'),
+    ]
+
     name = models.CharField(max_length=35, unique=True, null=False)
     image = models.ImageField(null=True, blank=True, upload_to='book_images/')
-    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='books', null=True)
+    author = models.CharField(max_length=60, null=False, blank=False)
     total_pages = models.IntegerField(default=0, editable=False)
     pdf = models.FileField(upload_to='book_pdfs/', blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='')
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
         self.total_pages = self.pages.count()
         super().save(update_fields=['total_pages'])
 
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
         p.drawString(100, 750, f"Book Title: {self.name}")
-        p.drawString(100, 735, f"Author: {self.author.username}")
+        p.drawString(100, 735, f"Author: {self.author}")
         p.drawString(100, 720, f"Total Pages: {self.total_pages}")
 
         if self.image:
@@ -44,8 +58,15 @@ class Book(models.Model):
 
         pdf_file_name = f'book_{self.id}.pdf'
         self.pdf.save(pdf_file_name, File(buffer), save=False)
-
         super().save(update_fields=['pdf'])
+
+
+class BookGenre(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('book', 'genre')
 
 
 class Page(models.Model):
@@ -75,3 +96,32 @@ def update_total_pages(sender, instance, **kwargs):
 class LastPage(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='recent_pages')
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='recent_pages')
+
+
+class FavoriteBook(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='favorite_books')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='favorited_by')
+
+    # class Meta:
+    #     unique_together = ('user', 'book')
+
+
+class BookRating(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='book_ratings')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='ratings')
+    rating = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        # unique_together = ('user', 'book')
+        constraints = [
+            models.CheckConstraint(check=models.Q(rating__gte=1) & models.Q(rating__lte=10), name='rating_range')
+        ]
+
+
+class BookFeedback(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='book_feedbacks')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='feedbacks')
+    feedback = models.TextField()
+
+    # class Meta:
+    #     unique_together = ('user', 'book')

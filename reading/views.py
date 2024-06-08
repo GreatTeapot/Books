@@ -100,3 +100,65 @@ class LastPageView(generics.RetrieveAPIView):
             return Response(serializer.data)
         except LastPage.DoesNotExist:
             return Response({"error": "No last page found for user"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@extend_schema(tags=['Books'])
+class AddToFavoritesView(generics.CreateAPIView):
+    # queryset = FavoriteBook.objects.all()
+    serializer_class = FavoriteBookSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, book_id):
+        try:
+            # book_id = kwargs.get('book_id')
+            book = Book.objects.get(id=book_id)
+            data = {'user': request.user.id, 'book': book.id}
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Book.DoesNotExist:
+            return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+@extend_schema(tags=['Books'])
+class AddRatingView(generics.CreateAPIView):
+    serializer_class = BookRatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, book_id, ):
+        book = Book.objects.get(id=book_id)
+        data = {'user': request.user.id, 'book': book.id, 'rating': request.data.get('rating')}
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@extend_schema(tags=['Books'])
+class AddFeedbackView(generics.CreateAPIView):
+    serializer_class = BookFeedbackSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, book_id):
+        try:
+            book = Book.objects.get(id=book_id)
+            data = {'user': request.user.id, 'book': book.id, 'feedback': request.data.get('feedback')}
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Book.DoesNotExist:
+            return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, book_id):
+        try:
+            book = Book.objects.get(id=book_id)
+            feedbacks = BookFeedback.objects.filter(book=book)
+            serializer = self.get_serializer(feedbacks, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Book.DoesNotExist:
+            return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
