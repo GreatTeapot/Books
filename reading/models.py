@@ -1,4 +1,6 @@
 import os
+
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from regauth.models import CustomUser
@@ -61,6 +63,15 @@ class Book(models.Model):
         super().save(update_fields=['pdf'])
 
 
+class BookStatus(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=Book.STATUS_CHOICES, default='')
+
+    class Meta:
+        unique_together = ('user', 'book')
+
+
 class BookGenre(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
@@ -71,7 +82,7 @@ class BookGenre(models.Model):
 
 class Page(models.Model):
     text = models.TextField()
-    page_number = models.PositiveIntegerField()
+    page_number = models.DecimalField(max_digits=6, decimal_places=1, validators=[MinValueValidator(0), MaxValueValidator(9999.9)])
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='pages')
 
     class Meta:
@@ -109,7 +120,7 @@ class FavoriteBook(models.Model):
 class BookRating(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='book_ratings')
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='ratings')
-    rating = models.PositiveIntegerField(default=0)
+    rating = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         # unique_together = ('user', 'book')

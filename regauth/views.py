@@ -125,6 +125,8 @@ class ChangePasswordAPIView(APIView):
 
 @extend_schema(tags=['Authorization'])
 class CustomUserTokenRefreshView(APIView):
+    serializer_class = UserSerializer
+
     """
         эндпоинт для обновление access токена
     """

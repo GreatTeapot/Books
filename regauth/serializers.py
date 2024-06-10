@@ -4,14 +4,10 @@ from .models import CustomUser
 
 
 class UserSerializer(serializers.ModelSerializer):
-    books = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'books')
-
-    def get_books(self, obj):
-        return [book.name for book in obj.books.all()]
+        fields = ('id', 'username', 'email')
 
 
 class UserRegisSerializer(serializers.ModelSerializer):
